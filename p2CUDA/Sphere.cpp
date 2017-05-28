@@ -1,7 +1,7 @@
 #include "Sphere.h"
 
 
-Sphere::Sphere(float radius, Vector3 location, Material *material)
+Sphere::Sphere(float radius, Vector3 location, Material material)
 	: Primitive(material), radius(radius), location(location)
 {}
 

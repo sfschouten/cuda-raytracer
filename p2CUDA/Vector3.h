@@ -25,7 +25,9 @@ public:
 	__host__ __device__ Vector3 operator+=(const float f);
 	__host__ __device__ Vector3 operator-=(const float f);
 
-	__host__ __device__ Vector3 Normalized();
-	__host__ __device__ void Normalize();
+	__host__ __device__ Vector3 normalized();
+	__host__ __device__ void normalize();
+
+	__host__ __device__ float length();
 };
 

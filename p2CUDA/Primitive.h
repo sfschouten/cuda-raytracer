@@ -6,11 +6,13 @@
 
 class Primitive
 {
-private:
+private:	
 	Material material;
 
 public:
-	Primitive(Material *material);
+	Primitive(Material material);
 	__device__ __host__ ~Primitive();
+
+	__device__ Material getMaterial() { return material; }
 };
 

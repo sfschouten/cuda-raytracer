@@ -33,7 +33,7 @@ __host__ __device__ Vector3 Vector3::operator*(const float scalar)
 }
 __host__ __device__ Vector3 Vector3::operator/(const float scalar)
 {
-	Vector3 v(x / scalar, y / scalar, z / scalar); return v;
+	return *this * (1 / scalar);
 }
 
 __host__ __device__ Vector3 Vector3::operator+=(const Vector3 f)
@@ -63,13 +63,16 @@ __host__ __device__ Vector3 Vector3::operator-=(const float f)
 	x -= f; y -= f; z -= f; return *this;
 }
 
-__host__ __device__ Vector3 Vector3::Normalized()
+__host__ __device__ Vector3 Vector3::normalized()
 {
-	float length = sqrt(x*x + y*y + z*z);
-	return *this / length;
+	return *this / length();
 }
-__host__ __device__ void Vector3::Normalize()
+__host__ __device__ void Vector3::normalize()
 {
-	float length = sqrt(x*x + y*y + z*z);
-	*this /= length;
+	*this /= length();
+}
+
+__host__ __device__ float Vector3::length()
+{
+	return sqrt(x*x + y*y + z*z);
 }

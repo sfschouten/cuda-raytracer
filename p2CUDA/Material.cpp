@@ -6,11 +6,11 @@ Material::Material(float3 color)
 {}
 
 
-Material::~Material()
+__device__ __host__ Material::~Material()
 {}
 
 
-float3 Material::getColor(float2 uv)
+__device__ float3 Material::getColor(float u, float v)
 {
 	return color;
 }

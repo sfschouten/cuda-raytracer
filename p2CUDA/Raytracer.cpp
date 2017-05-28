@@ -59,7 +59,7 @@ uchar4 *h_Src = 0;
 uchar4 *d_Dst = NULL;
 
 //Initial image width and height
-int imageW = 512, imageH = 512;
+int imageW = 520, imageH = 520;
 
 // Timer ID
 StopWatchInterface *hTimer = NULL;
@@ -433,15 +433,20 @@ void initRaytracing()
 { 
 	if (h_Camera)
 		delete h_Camera;
-	h_Camera = new Camera(*new Vector3(5, 1, 0), *new Vector3(5, 1, 5));
+
+	h_Camera = new Camera(Vector3(5, 1, 0), Vector3(5, 1, 5));
 	h_Camera->update();
 
 	if (h_Scene)
 		delete h_Scene;
-	h_Scene = new Scene();
-	h_Scene->addSphere(new Sphere(1, *new Vector3(3.8f, 1, 5), new Material(make_float3(1, 0, 0))));
-	h_Scene->addSphere(new Sphere(1, *new Vector3(5, 1, 4), new Material(make_float3(0, 1, 0))));
-	h_Scene->addSphere(new Sphere(1, *new Vector3(6.2f, 1, 5), new Material(make_float3(0, 0, 1))));
+
+	h_Scene = new Scene(Primitive(Material(make_float3(0,0,0))));
+
+	h_Scene->addLight(new Light(Vector3(5, 1, 0), make_float3(8, 8, 8)));
+
+	h_Scene->addSphere(new Sphere(1, Vector3(2.8f, 1, 5), Material(make_float3(1, 0, 0))));
+	h_Scene->addSphere(new Sphere(1, Vector3(5, 1, 4), Material(make_float3(0, 1, 0))));
+	h_Scene->addSphere(new Sphere(1, Vector3(7.2f, 1, 5), Material(make_float3(0, 0, 1))));
 
 	initDirections();
 }

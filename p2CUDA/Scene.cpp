@@ -1,8 +1,10 @@
 #include "Scene.h"
 
 
-Scene::Scene()
+Scene::Scene(Primitive skyDome)
+	: skyDome(skyDome)
 {
+	h_Lights = std::vector<Light>();
 	h_Spheres = std::vector<Sphere>();
 	h_Planes = std::vector<Plane>();
 }
@@ -14,8 +16,16 @@ Scene *Scene::copyToDevice()
 {
 	int arraySize;
 	
+	nrLights = h_Lights.size();
+	arraySize = sizeof(Light) * nrLights;
+	if (arraySize)
+	{
+		cudaMalloc(&d_Lights, arraySize);
+		cudaMemcpy(d_Lights, &h_Lights[0], arraySize, cudaMemcpyHostToDevice);
+	}
+
 	nrSpheres = h_Spheres.size();
-	arraySize = sizeof(Sphere) * h_Spheres.size();
+	arraySize = sizeof(Sphere) * nrSpheres;
 	if (arraySize)
 	{
 		cudaMalloc(&d_Spheres, arraySize);
@@ -23,7 +33,7 @@ Scene *Scene::copyToDevice()
 	}
 	
 	nrPlanes = h_Planes.size();
-	arraySize = sizeof(Plane) * h_Planes.size();
+	arraySize = sizeof(Plane) * nrPlanes;
 	if (arraySize)
 	{
 		cudaMalloc(&d_Planes, arraySize);
@@ -31,6 +41,11 @@ Scene *Scene::copyToDevice()
 	}
 
 	return ICudaObject::physicalCopyToDevice<Scene>(this);
+}
+
+void Scene::addLight(Light *l)
+{
+	h_Lights.insert(h_Lights.end(), *l);
 }
 
 void Scene::addSphere(Sphere *s)
@@ -45,7 +60,7 @@ void Scene::addPlane(Plane *p)
 
 __device__ RayIntersection Scene::intersect(Ray ray)
 {
-	RayIntersection closest;
+	RayIntersection closest(ray, &skyDome);
 
 	for (int i = 0; i < nrSpheres; i++)
 	{
@@ -70,4 +85,33 @@ __device__ RayIntersection Scene::intersect(Ray ray)
 	}
 
 	return closest;
+}
+
+__device__ bool Scene::shadowIntersect(Ray ray)
+{
+	bool inShadow = false;
+
+	for (int i = 0; i < nrSpheres; i++)
+	{
+		Sphere *s = &d_Spheres[i];
+
+		RaySphereIntersection isct = RaySphereIntersection(ray, s);
+		if (isct.find())
+			inShadow = true; break;
+	}
+
+	if (!inShadow)
+	{
+		for (int i = 0; i < nrPlanes; i++)
+		{
+			Plane *p = &d_Planes[i];
+
+			RayPlaneIntersection isct = RayPlaneIntersection(ray, p);
+			if (isct.find())
+				inShadow = true; break;
+		}
+	}
+	
+	__syncthreads();
+	return inShadow;
 }

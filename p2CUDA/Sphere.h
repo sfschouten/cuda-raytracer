@@ -9,7 +9,7 @@ private:
 	float radius;
 
 public:
-	Sphere(float radius, Vector3 location, Material *material);
+	Sphere(float radius, Vector3 location, Material material);
 	__device__ __host__ ~Sphere();
 
 	__device__ __host__ Vector3 getLocation();

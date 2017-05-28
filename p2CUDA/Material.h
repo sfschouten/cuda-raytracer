@@ -10,6 +10,6 @@ public:
 	Material(float3 color);
 	__device__ __host__ ~Material();
 
-	float3 getColor(float2 uv);
+	__device__ float3 getColor(float u, float v);
 };
 

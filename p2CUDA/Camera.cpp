@@ -26,7 +26,7 @@ Camera::~Camera()
 void Camera::setDirection()
 {
 	direction = target - location; 
-	direction.Normalize();
+	direction.normalize();
 }
 
 void Camera::setScreenDistance()
@@ -42,8 +42,8 @@ Vector3 Camera::getLocation()
 void Camera::update()
 {
 	Vector3 a(direction.x, 1, direction.z);
-	fp = Vector3::Cross(direction, a); fp.Normalize();
-	sp = Vector3::Cross(fp, direction); sp.Normalize();
+	fp = Vector3::Cross(direction, a); fp.normalize();
+	sp = Vector3::Cross(fp, direction); sp.normalize();
 }
 
 Vector3 Camera::getPixelDirection(int x, int y, int pWidth, int pHeight)
@@ -54,6 +54,6 @@ Vector3 Camera::getPixelDirection(int x, int y, int pWidth, int pHeight)
 	Vector3 a = fp * -rx;
 	Vector3 b = sp *  ry;
 	Vector3 c = direction * screenDistance;
-	a += b; a += c; a.Normalize();
+	a += b; a += c; a.normalize();
 	return a;
 }

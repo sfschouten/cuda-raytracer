@@ -1,5 +1,6 @@
 #pragma once
 #include <math.h>
+
 #include "Ray.h"
 #include "Primitive.h"
 #include "Plane.h"
@@ -8,32 +9,32 @@
 class Intersection
 {
 protected:
-	__device__ Intersection();
-	__device__ ~Intersection();
+	__device__ Intersection() {}
+	__device__ ~Intersection() {}
 	
 public:
-	__device__ virtual void find() {};
+	__device__ virtual bool find() { return false; };
 };
 
 class RayIntersection : public Intersection
 {
+
 protected:
 	Ray ray;
-	Primitive *p;
+	Primitive *primitive;
+
 	Vector3 collissionCoord;
 	Vector3 normal;
 
-	__device__ RayIntersection(Ray ray, Primitive *p);
-
-	virtual float2 getTextureCoord();
-
 public:
-	__device__ RayIntersection();
-	__device__ ~RayIntersection();
+	__device__ RayIntersection(Ray ray, Primitive *primitive);
+	__device__ ~RayIntersection() {}
 
-	__device__ Ray getRay();
-	__device__ Vector3 getNormal();
-	//__device__ Ray getRay();
+	__device__ Ray getRay() { return ray; }
+	__device__ Vector3 getNormal() { return normal; }
+	__device__ Primitive *getPrimitive() { return primitive; }
+
+	__device__ virtual float2 getTextureCoord();
 };
 
 class RaySphereIntersection : public RayIntersection
@@ -41,8 +42,8 @@ class RaySphereIntersection : public RayIntersection
 public:
 	__device__ RaySphereIntersection(Ray ray, Sphere *s);
 
-	__device__ void find();
-	float2 getTextureCoord();
+	__device__ bool find();
+	__device__ float2 getTextureCoord();
 };
 
 class RayPlaneIntersection : public RayIntersection
@@ -50,6 +51,6 @@ class RayPlaneIntersection : public RayIntersection
 public:
 	__device__ RayPlaneIntersection(Ray ray, Plane *p);
 
-	__device__ void find();
-	float2 getTextureCoord();
+	__device__ bool find();
+	__device__ float2 getTextureCoord();
 };
