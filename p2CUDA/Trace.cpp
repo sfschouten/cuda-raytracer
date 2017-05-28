@@ -2,41 +2,55 @@
 
 __device__ float3 PrimaryTrace::Do(Scene *scene, int recursionDepth)
 {
-	recursionDepth--;
 	RayIntersection closest = scene->intersect(ray);
 	Primitive *hit = closest.getPrimitive();
 
-	Material hitMat = hit->getMaterial();
-	float2 uv = closest.getTextureCoord();
-	float3 diffuseColor = hitMat.getColor(uv.x, uv.y);
-	Light *lights = scene->getLights();
-	float3 totalLuminance;
-	for (int i = 0; i < scene->getNrLights(); i++)
+	float3 result = make_float3(0, 0, 0);
+	if (closest.getRay().length != FLT_MAX)
 	{
-		if (closest.getRay().length != FLT_MAX)
+		Material hitMat = hit->getMaterial();
+		float2 uv = closest.getTextureCoord();
+		float3 diffuseColor = hitMat.getDiffuseColor(uv.x, uv.y);
+		Light *lights = scene->getLights();
+		
+		for (int i = 0; i < scene->getNrLights(); i++)
 		{
 			Light &l = lights[i];
 			ShadowTrace st = ShadowTrace(closest, l);
-			float3 luminance = st.Do(scene, recursionDepth);
-			totalLuminance.x += luminance.x;
-			totalLuminance.y += luminance.y;
-			totalLuminance.z += luminance.z;
+			float3 luminance = st.Do(scene, -1); //recursionDepth doesn't matter here.
+			result.x += luminance.x;
+			result.y += luminance.y;
+			result.z += luminance.z;
 		}
-		__syncthreads();
+
+		result.x *= diffuseColor.x;
+		result.y *= diffuseColor.y;
+		result.z *= diffuseColor.z;
+
+		if (recursionDepth > 0)
+		{
+			Vector3 d = closest.getRay().direction;
+			Vector3 newV = d - closest.getNormal() * Vector3::Dot(closest.getNormal(), d) * 2;
+			Ray bounced = Ray(closest.getRay().AsCoordinateVector() + newV * Epsilon, newV.normalized());
+			PrimaryTrace subTrace = PrimaryTrace(bounced);
+			float3 subColor = subTrace.Do(scene, recursionDepth - 1);
+			float3 specColor = hitMat.getSpecularColor(uv.x, uv.y);
+			result.x += specColor.x * subColor.x;
+			result.y += specColor.y * subColor.y;
+			result.z += specColor.z * subColor.z;
+		}
 	}
 
-	totalLuminance.x *= diffuseColor.x;
-	totalLuminance.y *= diffuseColor.y;
-	totalLuminance.z *= diffuseColor.z;
-
-	return totalLuminance;
+	__syncthreads();
+	return result;
 }
 
 __device__ float3 ShadowTrace::Do(Scene *scene, int recursionDepth)
 {
-	float3 lColor = light.getColor();
+	float3 lColor = light.getDiffuseColor();
 	bool lit = !scene->shadowIntersect(ray);
 	__syncthreads();
+
 	float l = ray.length;
 	float lightAttenuation = ((int)lit) / (l * l);
 	float areaAttenuation = fmaxf(0.0f, Vector3::Dot(ri.getNormal(), ray.direction));

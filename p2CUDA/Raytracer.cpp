@@ -440,13 +440,14 @@ void initRaytracing()
 	if (h_Scene)
 		delete h_Scene;
 
-	h_Scene = new Scene(Primitive(Material(make_float3(0,0,0))));
+	h_Scene = new Scene(Primitive(Material(make_float3(0, 0, 0), make_float3(0, 0, 0))));
 
-	h_Scene->addLight(new Light(Vector3(5, 1, 0), make_float3(8, 8, 8)));
+	h_Scene->addLight(new Light(Vector3(3, 0, 0), make_float3(8, 8, 8)));
+	h_Scene->addLight(new Light(Vector3(7, 2, 0), make_float3(8, 8, 8)));
 
-	h_Scene->addSphere(new Sphere(1, Vector3(2.8f, 1, 5), Material(make_float3(1, 0, 0))));
-	h_Scene->addSphere(new Sphere(1, Vector3(5, 1, 4), Material(make_float3(0, 1, 0))));
-	h_Scene->addSphere(new Sphere(1, Vector3(7.2f, 1, 5), Material(make_float3(0, 0, 1))));
+	h_Scene->addSphere(new Sphere(1, Vector3(2.8f, 1, 5), Material(make_float3(0.5, 0, 0), make_float3(0.5, 0.5, 0.5))));
+	h_Scene->addSphere(new Sphere(1, Vector3(5, 1, 4), Material(make_float3(0, 0.2, 0), make_float3(0.8, 0.8, 0.8))));
+	h_Scene->addSphere(new Sphere(1, Vector3(7.2f, 1, 5), Material(make_float3(0, 0, 1), make_float3(0, 0, 0))));
 
 	initDirections();
 }
@@ -602,11 +603,16 @@ int main(int argc, char **argv)
     initGL(&argc, argv);
     initOpenGLBuffers(imageW, imageH);
 
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 268435456);
+	//cudaDeviceSetLimit(cudaLimitMallocHeapSize, 268435456);
+	cudaDeviceSetLimit(cudaLimitStackSize, 16 * 1024);
 
 	size_t heapSize;
 	cudaDeviceGetLimit(&heapSize, cudaLimitMallocHeapSize);
 	printf("Heap size: %zd\n", heapSize);
+
+	size_t stackSize;
+	cudaDeviceGetLimit(&stackSize, cudaLimitStackSize);
+	printf("Stack size: %zd\n", stackSize);
 
     printf("Starting GLUT main loop...\n");
     printf("\n");

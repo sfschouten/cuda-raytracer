@@ -12,6 +12,6 @@ public:
 	__host__ __device__ ~Light() {}
 
 	__device__ Vector3 getLocation() { return location; }
-	__device__ float3 getColor() { return color; }
+	__device__ float3 getDiffuseColor() { return color; }
 };
 

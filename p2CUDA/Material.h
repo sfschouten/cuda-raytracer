@@ -4,12 +4,14 @@
 class Material
 {
 private:
-	float3 color;
+	float3 diffuseColor;
+	float3 specularColor;
 
 public:
-	Material(float3 color);
+	Material(float3 diffuseColor, float3 specularColor);
 	__device__ __host__ ~Material();
 
-	__device__ float3 getColor(float u, float v);
+	__device__ float3 getDiffuseColor(float u, float v);
+	__device__ float3 getSpecularColor(float u, float v);
 };
 
