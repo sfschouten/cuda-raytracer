@@ -1,14 +1,11 @@
 #include "Ray.h"
 
 
-Ray::Ray()
+__host__ __device__ Ray::Ray(Vector3 origin, Vector3 direction, float length)
+	: origin(origin), direction(direction), length(length)
 {}
 
-Ray::Ray(Vector3 origin, Vector3 direction)
-	: origin(origin), direction(direction)
-{}
-
-Vector3 Ray::AsCoordinateVector()
+__host__ __device__ Vector3 Ray::AsCoordinateVector()
 {
 	return origin + direction * length;
 }

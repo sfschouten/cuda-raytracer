@@ -33,7 +33,7 @@ __host__ __device__ Vector3 Vector3::operator*(const float scalar)
 }
 __host__ __device__ Vector3 Vector3::operator/(const float scalar)
 {
-	return *this * (1 / scalar);
+	Vector3 v(x / scalar, y / scalar, z / scalar); return v;
 }
 
 __host__ __device__ Vector3 Vector3::operator+=(const Vector3 f)
