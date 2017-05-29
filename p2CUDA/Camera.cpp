@@ -50,8 +50,8 @@ Vector3 Camera::getPixelDirection(int x, int y, int pWidth, int pHeight)
 {
 	float screenHeight = screenWidth * (pHeight / (float)pWidth);
 	float rx = (float)x / pWidth * screenWidth - screenWidth / 2;
-	float ry = (float)y / pHeight * -screenHeight + screenHeight / 2;
-	Vector3 a = fp * -rx;
+	float ry = (float)y / pHeight * -1 * screenHeight + screenHeight / 2;
+	Vector3 a = fp * -1 * rx;
 	Vector3 b = sp *  ry;
 	Vector3 c = direction * screenDistance;
 	a += b; a += c; a.normalize();

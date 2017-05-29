@@ -7,7 +7,7 @@
 class Trace
 {
 protected:
-	const float Epsilon = 0.00001f;
+	const float Epsilon = 0.0005f;
 	Ray ray;
 
 public:

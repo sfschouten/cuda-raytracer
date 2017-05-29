@@ -31,10 +31,10 @@ __device__ bool RaySphereIntersection::find()
 	Vector3 q = c - ray.direction * t;
 	float p2 = Vector3::Dot(q, q);
 	float sphere_r2 = s->getRadius() * s->getRadius();
-	if (sphere_r2 >= p2)
+	if (p2 <= sphere_r2)
 	{
 		t -= (float)sqrt(sphere_r2 - p2);
-		if (t < ray.length && t > 0)
+		if (t <= ray.length && t > 0)
 		{
 			ray.length = t;
 			collissionCoord = ray.AsCoordinateVector();
@@ -56,11 +56,29 @@ __device__ float2 RaySphereIntersection::getTextureCoord()
 */
 __device__ RayPlaneIntersection::RayPlaneIntersection(Ray ray, Plane *p)
 	: RayIntersection(ray, p)
-{}
+{
+	normal = p->getNormal();
+}
 
 __device__ bool RayPlaneIntersection::find()
 {
-	return false;
+	bool result = false;
+
+	Plane *plane = (Plane *)primitive;
+	float a = Vector3::Dot(ray.direction, normal);
+	if (a != 0)
+	{
+		float t = -1 * (Vector3::Dot(ray.origin, normal) + plane->getD()) / a;
+		if (t <= ray.length && t > 0)
+		{
+			ray.length = t;
+			collissionCoord = ray.AsCoordinateVector();
+			result = true;
+		}
+	}
+
+	__syncthreads();
+	return result;
 }
 
 __device__ float2 RayPlaneIntersection::getTextureCoord()

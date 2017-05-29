@@ -60,16 +60,15 @@ void Scene::addPlane(Plane *p)
 
 __device__ RayIntersection Scene::intersect(Ray ray)
 {
-	RayIntersection closest(ray, &skyDome);
+	RayIntersection closest = RayIntersection(ray, &skyDome);
 
 	for (int i = 0; i < nrSpheres; i++)
 	{
 		Sphere *s = &d_Spheres[i];
 		
 		RaySphereIntersection isct = RaySphereIntersection(ray, s);
-		isct.find();
 		
-		if (closest.getRay().length > isct.getRay().length) 
+		if (isct.find() && closest.getRay().length > isct.getRay().length)
 			closest = isct; 
 	}
 
@@ -78,9 +77,8 @@ __device__ RayIntersection Scene::intersect(Ray ray)
 		Plane *p = &d_Planes[i];
 
 		RayPlaneIntersection isct = RayPlaneIntersection(ray, p);
-		isct.find();
-
-		if (closest.getRay().length > isct.getRay().length)
+		
+		if (isct.find() && closest.getRay().length > isct.getRay().length)
 		    closest = isct;
 	}
 
@@ -91,25 +89,22 @@ __device__ bool Scene::shadowIntersect(Ray ray)
 {
 	bool inShadow = false;
 
-	for (int i = 0; i < nrSpheres; i++)
+	for (int i = 0; i < nrSpheres && !inShadow; i++)
 	{
 		Sphere *s = &d_Spheres[i];
 
 		RaySphereIntersection isct = RaySphereIntersection(ray, s);
 		if (isct.find())
-			inShadow = true; break;
+			inShadow = true;
 	}
 
-	if (!inShadow)
+	for (int i = 0; i < nrPlanes && !inShadow; i++)
 	{
-		for (int i = 0; i < nrPlanes; i++)
-		{
-			Plane *p = &d_Planes[i];
+		Plane *p = &d_Planes[i];
 
-			RayPlaneIntersection isct = RayPlaneIntersection(ray, p);
-			if (isct.find())
-				inShadow = true; break;
-		}
+		RayPlaneIntersection isct = RayPlaneIntersection(ray, p);
+		if (isct.find())
+			inShadow = true;
 	}
 	
 	__syncthreads();

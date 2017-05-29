@@ -18,16 +18,15 @@ __global__ void Raytrace(uchar4 *dst, const int imageW, const int imageH, Camera
 	PrimaryTrace trace(ray);
 	float3 color = trace.Do(scene, 8);
 
-	dst[i].x = color.x * 255;
-	dst[i].y = color.y * 255;
-	dst[i].z = color.z * 255;
+	dst[i].x = (color.x > 1 ? 1 : color.x < 0 ? 0 : color.x) * 255;
+	dst[i].y = (color.y > 1 ? 1 : color.y < 0 ? 0 : color.y) * 255;
+	dst[i].z = (color.z > 1 ? 1 : color.z < 0 ? 0 : color.z) * 255;
 	__syncthreads();
 }
 
 void RunRaytrace(uchar4 *dst, const int imageW, const int imageH, Camera *camera, Vector3 *directions, Scene *scene)
 {
-	//printf("%i %i", imageW, imageH);
-	dim3 block(32, 32, 1);
+	dim3 block(24, 24, 1);
 	dim3 grid(imageW / block.x, imageH / block.y, 1);
 	Raytrace<<<grid, block>>>(dst, imageW, imageH, camera, directions, scene);
 } 

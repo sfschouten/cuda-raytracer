@@ -179,13 +179,13 @@ void displayFunc(void)
     glDisable(GL_DEPTH_TEST);
 
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(0.0f, 0.0f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 0.0f);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex2f(1.0f, 1.0f);
     glTexCoord2f(0.0f, 1.0f);
+    glVertex2f(0.0f, 0.0f);
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex2f(1.0f, 0.0f);
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex2f(1.0f, 1.0f);
+    glTexCoord2f(0.0f, 0.0f);
     glVertex2f(0.0f, 1.0f);
     glEnd();
 
@@ -434,7 +434,7 @@ void initRaytracing()
 	if (h_Camera)
 		delete h_Camera;
 
-	h_Camera = new Camera(Vector3(5, 1, 0), Vector3(5, 1, 5));
+	h_Camera = new Camera(Vector3(2.5f, 2.5f, 0.1f), Vector3(2.5f, 1.75, 4));
 	h_Camera->update();
 
 	if (h_Scene)
@@ -442,12 +442,18 @@ void initRaytracing()
 
 	h_Scene = new Scene(Primitive(Material(make_float3(0, 0, 0), make_float3(0, 0, 0))));
 
-	h_Scene->addLight(new Light(Vector3(3, 0, 0), make_float3(8, 8, 8)));
-	h_Scene->addLight(new Light(Vector3(7, 2, 0), make_float3(8, 8, 8)));
+	h_Scene->addLight(new Light(Vector3(2.5f, 2.5f, 0.1f), 50, 255, 241, 224));
 
-	h_Scene->addSphere(new Sphere(1, Vector3(2.8f, 1, 5), Material(make_float3(0.5, 0, 0), make_float3(0.5, 0.5, 0.5))));
-	h_Scene->addSphere(new Sphere(1, Vector3(5, 1, 4), Material(make_float3(0, 0.2, 0), make_float3(0.8, 0.8, 0.8))));
-	h_Scene->addSphere(new Sphere(1, Vector3(7.2f, 1, 5), Material(make_float3(0, 0, 1), make_float3(0, 0, 0))));
+	h_Scene->addPlane(new Plane(Vector3(0, 0, 0), Vector3(0, 1, 0),  Material(make_float3(0.7f, 0.7f, 0.7f), make_float3(0.3f, 0.3f, 0.3f))));
+	h_Scene->addPlane(new Plane(Vector3(0, 5, 0), Vector3(0, -1, 0), Material(make_float3(1, 1, 1), make_float3(0, 0, 0))));
+	h_Scene->addPlane(new Plane(Vector3(0, 0, 0), Vector3(0, 0, 1), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
+	h_Scene->addPlane(new Plane(Vector3(0, 0, 5), Vector3(0, 0, -1), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
+	h_Scene->addPlane(new Plane(Vector3(0, 0, 0), Vector3(1, 0, 0), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
+	h_Scene->addPlane(new Plane(Vector3(5, 0, 0), Vector3(-1, 0, 0), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
+
+	h_Scene->addSphere(new Sphere(1, Vector3(1, 1, 3),    Material(make_float3(0.5, 0, 0), make_float3(0.5, 0.5, 0.5))));
+	h_Scene->addSphere(new Sphere(1, Vector3(2.5f, 2.5f, 4), Material(make_float3(0, 0.2, 0), make_float3(0.8, 0.8, 0.8))));
+	h_Scene->addSphere(new Sphere(1, Vector3(4, 1, 3),    Material(make_float3(0, 0, 1),   make_float3(0, 0, 0))));
 
 	initDirections();
 }
