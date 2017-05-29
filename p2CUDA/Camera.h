@@ -32,6 +32,12 @@ public:
 
 	__device__ __host__ Vector3 getLocation();
 
-	Vector3 getPixelDirection(int x, int y, int pWidth, int pHeight);
+	__device__ __host__ Vector3 getPixelDirection(int x, int y, int pWidth, int pHeight);
+
+	void move(Vector3 diff);
+	void moveDirection(float x, float y);
+
+	void addFOV(float dFov) { FOV += dFov; setScreenDistance(); }
+	
 };
 

@@ -15,6 +15,6 @@
 #include "Camera.h"
 #include "Scene.h"
 
-extern void RunRaytrace(uchar4 *dst, const int imageW, const int imageH, Camera *camera, Vector3 *directions, Scene *scene);
+extern void RunRaytrace(uchar4 *dst, const int imageW, const int imageH, Camera *camera, Vector3 *directions, Scene *scene, bool cameraUnlocked);
 
 #endif

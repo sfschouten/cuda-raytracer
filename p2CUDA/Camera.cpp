@@ -46,14 +46,33 @@ void Camera::update()
 	sp = Vector3::Cross(fp, direction); sp.normalize();
 }
 
-Vector3 Camera::getPixelDirection(int x, int y, int pWidth, int pHeight)
+__device__ __host__ Vector3 Camera::getPixelDirection(int x, int y, int pWidth, int pHeight)
 {
 	float screenHeight = screenWidth * (pHeight / (float)pWidth);
 	float rx = (float)x / pWidth * screenWidth - screenWidth / 2;
 	float ry = (float)y / pHeight * -1 * screenHeight + screenHeight / 2;
-	Vector3 a = fp * -1 * rx;
-	Vector3 b = sp *  ry;
+	Vector3 a = fp * -rx;
+	Vector3 b = sp * ry;
 	Vector3 c = direction * screenDistance;
 	a += b; a += c; a.normalize();
 	return a;
+}
+
+void Camera::move(Vector3 diff)
+{
+	Vector3 a = fp * -diff.x;
+	Vector3 b = sp * diff.y;
+	Vector3 c = direction * diff.z;
+	a += b; a += c;
+	location += a;
+}
+
+void Camera::moveDirection(float x, float y)
+{
+	Vector3 a = fp * -x;
+	Vector3 b = sp * y;
+	Vector3 c = direction * screenDistance;
+	a += b; a += c; a.normalize();
+	direction = a;
+	update();
 }

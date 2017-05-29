@@ -71,6 +71,8 @@ bool leftClicked = false;
 bool middleClicked = false;
 bool rightClicked = false;
 
+bool cameraUnlocked = false;
+
 int numSMs = 0;          // number of multiprocessors
 int version = 1;         // Compute Capability
 
@@ -158,7 +160,7 @@ void renderImage()
 	printCudaLastError();
 
 	//Run raytracer on device.
-	RunRaytrace(d_Dst, imageW, imageH, d_Camera, d_Directions, d_Scene);
+	RunRaytrace(d_Dst, imageW, imageH, d_Camera, d_Directions, d_Scene, cameraUnlocked);
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0));
 	
@@ -223,6 +225,29 @@ void cleanup()
 
 void initMenus();
 
+void initDirections()
+{
+	//Clear Directions.
+	if (h_Directions)
+	{
+		free(h_Directions);
+		h_Directions = 0;
+	}
+
+	//Allocate memory for directions.
+	int directions_size = imageW * imageH * sizeof(Vector3);
+	h_Directions = new Vector3[imageW * imageH];
+
+	//Fill directions.
+	for (int y = 0; y < imageH; y++)
+		for (int x = 0; x < imageW; x++)
+			h_Directions[y * imageW + x] = h_Camera->getPixelDirection(x, y, imageW, imageH);
+
+	//Copy directions to device.
+	cudaMalloc((void **)&d_Directions, directions_size);
+	cudaMemcpy(d_Directions, h_Directions, directions_size, cudaMemcpyHostToDevice);
+}
+
 // OpenGL keyboard function
 void keyboardFunc(unsigned char k, int, int)
 {
@@ -231,8 +256,6 @@ void keyboardFunc(unsigned char k, int, int)
     switch (k)
     {
         case '\033':
-        case 'q':
-        case 'Q':
             printf("Shutting down...\n");
 
             #if defined(__APPLE__) || defined(MACOSX)
@@ -243,30 +266,29 @@ void keyboardFunc(unsigned char k, int, int)
             #endif
             break;
 		case 'a':
-        case '4':   // Left arrow key
-            
+			h_Camera->move(Vector3(-0.05f, 0, 0));
             break;
 		case 'w':
-        case '8':   // Up arrow key
-            
+			h_Camera->move(Vector3(0, 0, 0.05f));
             break;
 		case 'd':
-        case '6':   // Right arrow key
-            
+			h_Camera->move(Vector3(0.05f, 0, 0));
             break;
 		case 's':
-        case '2':   // Down arrow key
-            
+			h_Camera->move(Vector3(0, 0, -0.05f));
             break;
-
         case '+':
-            
+			if (cameraUnlocked)
+				h_Camera->addFOV(1);
             break;
-
         case '-':
-            
+			if (cameraUnlocked)
+				h_Camera->addFOV(-1);
             break;
-
+		case ' ':
+			cameraUnlocked = !cameraUnlocked;
+			if (!cameraUnlocked)
+				initDirections();
         default:
             break;
     }
@@ -297,40 +319,25 @@ void clickFunc(int button, int state, int x, int y)
     {
         leftClicked = 0;
         middleClicked = 0;
-    }
+    }   
 
-    lastx = x;
-    lasty = y;
 } // clickFunc
 
 // OpenGL mouse motion function
 void motionFunc(int x, int y)
 {
-    double fx = (double)(x - lastx) / 50.0 / (double)(imageW);
-    double fy = (double)(lasty - y) / 50.0 / (double)(imageH);
+    double fx = (double)(x - lastx) / (double)(imageW);
+    double fy = (double)(lasty - y) / (double)(imageH);
 
-    if (leftClicked)
-    {
-        
-    }
-    else
-    {
-        
-    }
+	lastx = x;
+	lasty = y;
+	if (cameraUnlocked)
+	{
+		//printf("%f, %f", fx, fy);
+		h_Camera->moveDirection(fx, fy);
+	}
+		
 
-    if (middleClicked)
-        if (fy > 0.0f)
-        {
-            
-        }
-        else
-        {
-            
-        }
-    else
-    {
-        
-    }
 } // motionFunc
 
 void timerEvent(int value)
@@ -406,35 +413,12 @@ void initOpenGLBuffers(int w, int h)
     printf("PBO created.\n");
 }
 
-void initDirections()
-{
-	//Clear Directions.
-	if (h_Directions)
-	{
-		free(h_Directions);
-		h_Directions = 0;
-	}
-
-	//Allocate memory for directions.
-	int directions_size = imageW * imageH * sizeof(Vector3);
-	h_Directions = new Vector3[imageW * imageH];
-
-	//Fill directions.
-	for (int y = 0; y < imageH; y++)
-		for (int x = 0; x < imageW; x++)
-			h_Directions[y * imageW + x] = h_Camera->getPixelDirection(x, y, imageW, imageH);
-
-	//Copy directions to device.
-	cudaMalloc((void **)&d_Directions, directions_size);
-	cudaMemcpy(d_Directions, h_Directions, directions_size, cudaMemcpyHostToDevice);
-}
-
 void initRaytracing()
 { 
 	if (h_Camera)
 		delete h_Camera;
 
-	h_Camera = new Camera(Vector3(2.5f, 2.5f, 0.1f), Vector3(2.5f, 1.75, 4));
+	h_Camera = new Camera(Vector3(2.5f, 1.75f, 1.f), Vector3(2.5f, 1.75f, 4));
 	h_Camera->update();
 
 	if (h_Scene)
@@ -442,18 +426,23 @@ void initRaytracing()
 
 	h_Scene = new Scene(Primitive(Material(make_float3(0, 0, 0), make_float3(0, 0, 0))));
 
-	h_Scene->addLight(new Light(Vector3(2.5f, 2.5f, 0.1f), 50, 255, 241, 224));
+	h_Scene->addLight(new Light(Vector3(2.5f, 1.75f, 2.5f), 15, 255, 241, 224));
 
-	h_Scene->addPlane(new Plane(Vector3(0, 0, 0), Vector3(0, 1, 0),  Material(make_float3(0.7f, 0.7f, 0.7f), make_float3(0.3f, 0.3f, 0.3f))));
+	Material test = Material(make_float3(1, 1, 1), make_float3(0, 0, 0));
+	//test.test = true;
+	h_Scene->addPlane(new Plane(Vector3(0, 0, 0), Vector3(0, 1, 0), Material(make_float3(0.85f, 0.85f, 0.85f), make_float3(0, 0, 0))));
 	h_Scene->addPlane(new Plane(Vector3(0, 5, 0), Vector3(0, -1, 0), Material(make_float3(1, 1, 1), make_float3(0, 0, 0))));
 	h_Scene->addPlane(new Plane(Vector3(0, 0, 0), Vector3(0, 0, 1), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
 	h_Scene->addPlane(new Plane(Vector3(0, 0, 5), Vector3(0, 0, -1), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
 	h_Scene->addPlane(new Plane(Vector3(0, 0, 0), Vector3(1, 0, 0), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
 	h_Scene->addPlane(new Plane(Vector3(5, 0, 0), Vector3(-1, 0, 0), Material(make_float3(1, 1, 0.92f), make_float3(0, 0, 0))));
 
-	h_Scene->addSphere(new Sphere(1, Vector3(1, 1, 3),    Material(make_float3(0.5, 0, 0), make_float3(0.5, 0.5, 0.5))));
-	h_Scene->addSphere(new Sphere(1, Vector3(2.5f, 2.5f, 4), Material(make_float3(0, 0.2, 0), make_float3(0.8, 0.8, 0.8))));
-	h_Scene->addSphere(new Sphere(1, Vector3(4, 1, 3),    Material(make_float3(0, 0, 1),   make_float3(0, 0, 0))));
+	/*h_Scene->addSphere(new Sphere(1, Vector3(1.5f, 1, 4),    Material(make_float3(0.5f, 0, 0), make_float3(0.075f, 0.03f, 0.03f))));
+	h_Scene->addSphere(new Sphere(1, Vector3(2.5f, 2.6547f, 4), Material(make_float3(0, 0.5f, 0), make_float3(0.03, 0.075f, 0.03f))));
+	h_Scene->addSphere(new Sphere(1, Vector3(3.5f, 1, 4),    Material(make_float3(0, 0, 0.5f),   make_float3(0.03f, 0.03f, 0.075f))));*/
+	h_Scene->addSphere(new Sphere(1, Vector3(1.5f, 1, 4), Material(make_float3(0.5f, 0, 0), make_float3(0, 0, 0))));
+	h_Scene->addSphere(new Sphere(1, Vector3(2.5f, 2.6547f, 4), Material(make_float3(0, 0.5f, 0), make_float3(0, 0, 0))));
+	h_Scene->addSphere(new Sphere(1, Vector3(3.5f, 1, 4), Material(make_float3(0, 0, 0.5f), make_float3(0, 0, 0))));
 
 	initDirections();
 }
@@ -489,7 +478,7 @@ void initGL(int *argc, char **argv)
     glutDisplayFunc(displayFunc);
     glutKeyboardFunc(keyboardFunc);
     glutMouseFunc(clickFunc);
-    glutMotionFunc(motionFunc);
+	glutPassiveMotionFunc(motionFunc);
     glutReshapeFunc(reshapeFunc);
     glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
     initMenus();
