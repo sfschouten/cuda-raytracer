@@ -60,23 +60,24 @@ void Scene::addPlane(Plane *p)
 
 __device__ RayIntersection Scene::intersect(Ray ray)
 {
-	RayIntersection closest = RayIntersection(ray, &skyDome);
+	RayIntersection defaultRI(ray, &skyDome);
+	RayIntersection& closest = defaultRI;
 
 	for (int i = 0; i < nrSpheres; i++)
 	{
 		Sphere *s = &d_Spheres[i];
 		
-		RaySphereIntersection isct = RaySphereIntersection(ray, s);
+		RaySphereIntersection isct(ray, s);
 		
 		if (isct.find() && closest.getRay().length > isct.getRay().length)
-			closest = isct; 
+			closest = isct;
 	}
 
 	for (int i = 0; i < nrPlanes; i++)
 	{
 		Plane *p = &d_Planes[i];
 
-		RayPlaneIntersection isct = RayPlaneIntersection(ray, p);
+		RayPlaneIntersection isct(ray, p);
 		
 		if (isct.find() && closest.getRay().length > isct.getRay().length)
 		    closest = isct;

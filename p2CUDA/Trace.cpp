@@ -9,9 +9,9 @@ __device__ float3 PrimaryTrace::Do(Scene *scene, int recursionDepth)
 	float3 result = make_float3(Epsilon, Epsilon, Epsilon);
 	if (closestDistance != FLT_MAX)
 	{
-		Material hitMat = hit->getMaterial();
+		Material &hitMat = hit->getMaterial();
 		float2 uv = closest.getTextureCoord();
-		float3 diffuseColor = hitMat.getDiffuseColor(uv.x, uv.y);
+		float3 &diffuseColor = hitMat.getDiffuseColor(uv.x, uv.y);
 		Light *lights = scene->getLights();
 		
 		for (int i = 0; i < scene->getNrLights(); i++)
@@ -28,11 +28,11 @@ __device__ float3 PrimaryTrace::Do(Scene *scene, int recursionDepth)
 		result.y *= diffuseColor.y;
 		result.z *= diffuseColor.z;
 
-		float3 specColor = hitMat.getSpecularColor(uv.x, uv.y);
+		float3 &specColor = hitMat.getSpecularColor(uv.x, uv.y);
 		bool hasSpec = specColor.x > 0 || specColor.y > 0 || specColor.z > 0;
 		if (recursionDepth > 0 && hasSpec)
 		{
-			Vector3 d = closest.getRay().direction;
+			Vector3 &d = closest.getRay().direction;
 			Vector3 n = closest.getNormal();
 			float rayNormalAngle = Vector3::Dot(d, n);
 
@@ -40,7 +40,7 @@ __device__ float3 PrimaryTrace::Do(Scene *scene, int recursionDepth)
 			Vector3 newV = d - n;
 
 			Ray bounced = Ray(closest.getRay().AsCoordinateVector() + (newV * Epsilon), newV);
-			PrimaryTrace subTrace = PrimaryTrace(bounced);
+			PrimaryTrace subTrace(bounced);
 			float3 subColor = subTrace.Do(scene, recursionDepth - 1);
 			
 			result.x += specColor.x * subColor.x;
@@ -70,7 +70,7 @@ __device__ float3 ShadowTrace::Do(Scene *scene, int recursionDepth)
 
 __device__ Ray ShadowTrace::createShadowRay(RayIntersection& ri, Light& l)
 {
-	Ray oldRay = ri.getRay();
+	Ray &oldRay = ri.getRay();
 	Vector3 oldRayEP = oldRay.AsCoordinateVector();
 	Vector3 diff = l.getLocation() - oldRayEP;
 	Vector3 dir = diff.normalized();

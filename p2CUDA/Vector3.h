@@ -3,7 +3,6 @@
 
 struct Vector3
 {
-public:
 	float x, y, z;
 
 	__host__ __device__ static Vector3 Cross(Vector3 a, Vector3 b);

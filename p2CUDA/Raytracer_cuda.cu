@@ -26,7 +26,6 @@ __global__ void Raytrace(uchar4 *dst, const int imageW, const int imageH, Camera
 	dst[i].x = (color.x > 1 ? 1 : color.x < 0 ? 0 : color.x) * 255;
 	dst[i].y = (color.y > 1 ? 1 : color.y < 0 ? 0 : color.y) * 255;
 	dst[i].z = (color.z > 1 ? 1 : color.z < 0 ? 0 : color.z) * 255;
-	
 }
 
 void RunRaytrace(uchar4 *dst, const int imageW, const int imageH, Camera camera, Vector3 *directions, Scene *scene, bool cameraUnlocked)

@@ -31,8 +31,8 @@ public:
 	__device__ RayIntersection(Ray ray, Primitive *primitive);
 	__device__ ~RayIntersection() {}
 
-	__device__ Ray getRay() { return ray; }
-	__device__ Vector3 getNormal() { return normal; }
+	__device__ Ray &getRay() { return ray; }
+	__device__ Vector3 &getNormal() { return normal; }
 	__device__ Primitive *getPrimitive() { return primitive; }
 
 	__device__ virtual float2 getTextureCoord();

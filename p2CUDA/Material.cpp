@@ -10,7 +10,7 @@ __device__ __host__ Material::~Material()
 {}
 
 
-__device__ float3 Material::getDiffuseColor(float u, float v)
+__device__ float3& Material::getDiffuseColor(float u, float v)
 {
 	if (test && ( (u < 0.5f && v < 0.5f) || (u > 0.5f && v > 0.5f) ))
 	{
@@ -19,7 +19,7 @@ __device__ float3 Material::getDiffuseColor(float u, float v)
 	else
 		return diffuseColor;
 }
-__device__ float3 Material::getSpecularColor(float u, float v)
+__device__ float3& Material::getSpecularColor(float u, float v)
 {
 	return specularColor;
 }

@@ -13,6 +13,6 @@ public:
 	Primitive(Material material);
 	__device__ __host__ ~Primitive();
 
-	__device__ Material getMaterial() { return material; }
+	__device__ Material& getMaterial() { return material; }
 };
 

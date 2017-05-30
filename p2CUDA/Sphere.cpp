@@ -9,7 +9,7 @@ Sphere::~Sphere()
 {}
 
 
-__device__ __host__ Vector3 Sphere::getLocation()
+__device__ __host__ Vector3& Sphere::getLocation()
 {
 	return location;
 }

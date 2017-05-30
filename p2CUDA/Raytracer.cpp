@@ -137,7 +137,7 @@ void renderImage()
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0));
 	
-	//cudaDeviceSynchronize();
+	cudaDeviceSynchronize();
 }
 
 // OpenGL display function
