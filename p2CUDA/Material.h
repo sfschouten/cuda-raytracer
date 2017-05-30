@@ -8,6 +8,8 @@ private:
 	float3 specularColor;
 
 public:
+	bool test = false;
+
 	Material(float3 diffuseColor, float3 specularColor);
 	__device__ __host__ ~Material();
 

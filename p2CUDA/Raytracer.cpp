@@ -33,21 +33,6 @@
 #include "Sphere.h"
 #include "Plane.h"
 
-#define MAX_EPSILON_ERROR 5.0f
-
-FILE *stream ;
-char g_ExecPath[300] ;
-
-// Set to 1 to run on the CPU instead of the GPU for timing comparison.
-#define RUN_CPU 0
-
-// Set to 1 to time frame generation
-#define RUN_TIMING 0
-
-// Random number macros
-#define RANDOMSEED(seed) ((seed) = ((seed) * 1103515245 + 12345))
-#define RANDOMBITS(seed, bits) ((unsigned int)RANDOMSEED(seed) >> (32 - (bits)))
-
 //OpenGL PBO and texture "names"
 GLuint gl_PBO, gl_Tex, gl_Shader;
 struct cudaGraphicsResource *cuda_pbo_resource; // handles OpenGL-CUDA exchange
@@ -59,7 +44,7 @@ uchar4 *h_Src = 0;
 uchar4 *d_Dst = NULL;
 
 //Initial image width and height
-int imageW = 520, imageH = 520;
+int imageW = 520, imageH = 520; //Results in 512*512
 
 // Timer ID
 StopWatchInterface *hTimer = NULL;
@@ -73,7 +58,6 @@ bool rightClicked = false;
 
 bool cameraUnlocked = false;
 
-int numSMs = 0;          // number of multiprocessors
 int version = 1;         // Compute Capability
 
 // Auto-Verification Code
@@ -97,11 +81,8 @@ Vector3 *d_Directions;
 
 
 #define MAX_EPSILON 50
-#define REFRESH_DELAY     10 //ms
+#define REFRESH_DELAY 10 //ms
 
-#ifndef MAX
-#define MAX(a,b) ((a > b) ? a : b)
-#endif
 #define BUFFER_DATA(i) ((char *)0 + i)
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -332,11 +313,7 @@ void motionFunc(int x, int y)
 	lastx = x;
 	lasty = y;
 	if (cameraUnlocked)
-	{
-		//printf("%f, %f", fx, fy);
 		h_Camera->moveDirection(fx, fy);
-	}
-		
 
 } // motionFunc
 
@@ -513,8 +490,6 @@ void initData(int argc, char **argv)
         exit(EXIT_WAIVED);
     }
 
-    numSMs = deviceProp.multiProcessorCount;
-
 	initRaytracing();
 }
 
@@ -611,9 +586,12 @@ int main(int argc, char **argv)
 
     printf("Starting GLUT main loop...\n");
     printf("\n");
-    printf("Press [e] to reset\n");
-    printf("Right mouse button = Menu\n");
-    printf("Press [q] to exit\n");
+
+    printf("Press [ESC] to exit\n");
+	printf("Use WASD to move the camera.\n");
+	printf("Use space to unlock the camera: \n");
+	printf("\t Use the mouse to look around.\n");
+	printf("\t Use +/- to change FOV.\n");
     printf("\n");
 
     sdkCreateTimer(&hTimer);

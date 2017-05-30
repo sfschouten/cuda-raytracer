@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <typeinfo>
 
 #include "Primitive.h"
 #include "Light.h"

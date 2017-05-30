@@ -48,7 +48,12 @@ __device__ bool RaySphereIntersection::find()
 
 __device__ float2 RaySphereIntersection::getTextureCoord()
 {
-	return make_float2(0, 0);
+	Sphere *s = (Sphere *)primitive;
+	Vector3 hitVec = (collissionCoord - s->getLocation()) / s->getRadius();
+	float u = 0.5f + (float)atan2(hitVec.z, hitVec.x) / (2 * CUDART_PI_F);
+	float v = 0.5f - (float)asin(hitVec.y) / CUDART_PI_F;
+
+	return make_float2(u, v);
 }
 
 /*
@@ -83,5 +88,16 @@ __device__ bool RayPlaneIntersection::find()
 
 __device__ float2 RayPlaneIntersection::getTextureCoord()
 {
-	return make_float2(0, 0);
+	Plane *plane = (Plane *)primitive;
+	Vector3 diff = collissionCoord - plane->getDistanceFromOrigin();
+
+	float x = fmodf(diff.x, 1);
+	if (x < 0)
+		x += 1;
+
+	float y = fmodf(diff.z, 1);
+	if (y < 0)
+		y += 1;
+
+	return make_float2(x, y);
 }

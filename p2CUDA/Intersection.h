@@ -1,5 +1,6 @@
 #pragma once
 #include <math.h>
+#include <math_constants.h>
 
 #include "Ray.h"
 #include "Primitive.h"
