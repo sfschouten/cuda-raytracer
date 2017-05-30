@@ -14,18 +14,12 @@ __global__ void Raytrace(uchar4 *dst, const int imageW, const int imageH, Camera
 	int i = y * imageW + x;
 
 	Vector3 direction;
-	if (cameraUnlocked)
-	{
-		direction = camera.getPixelDirection(x, y, imageW, imageH);
-	}
-	else
-	{
-		direction = directions[i];
-	}
+	if (cameraUnlocked) 
+		direction = camera.getPixelDirection(x, y, imageW, imageH); 
+	else 
+		direction = directions[i]; 
 
-	//printf("camera: %f %f %f %p \n", camera.getLocation().x, camera.getLocation().y, camera.getLocation().z, scene);
-
-	Ray& ray = Ray(camera.getLocation(), direction);
+	Ray ray = Ray(camera.getLocation(), direction);
 	PrimaryTrace trace(ray);
 	float3 color = trace.Do(scene, 8);
 
