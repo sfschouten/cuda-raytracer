@@ -397,7 +397,7 @@ void initRaytracing()
 
 	h_Scene = new Scene(Primitive(Material(make_float3(0, 0, 0), make_float3(0, 0, 0))));
 	
-	h_Scene->addLight(new Light(Vector3(2.5f, 1.75f, 2.5f), 5, 255, 241, 224));
+	h_Scene->addLight(new Light(Vector3(2.5f, 1.75f, 1.5f), 5, 255, 241, 224));
 
 	Material test = Material(make_float3(1, 1, 1), make_float3(0, 0, 0));
 	//test.test = true;
