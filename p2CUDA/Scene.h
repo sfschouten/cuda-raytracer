@@ -16,8 +16,8 @@ private:
 	std::vector<Sphere> h_Spheres;
 	std::vector<Plane> h_Planes;
 
-	Light *d_Lights;
-	Sphere *d_Spheres;
+	Light d_Lights[16];
+	Sphere *d_Spheres[128];
 	Plane *d_Planes;
 
 	int nrSpheres;

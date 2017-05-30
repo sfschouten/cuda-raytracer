@@ -72,16 +72,15 @@ char **pArgv = NULL;
 
 
 //Raytracer
-Camera *h_Camera;
-Camera *d_Camera;
-Scene *h_Scene;
-Scene *d_Scene;
 Vector3 *h_Directions;
 Vector3 *d_Directions;
 
+Camera *camera;
 
-#define MAX_EPSILON 50
-#define REFRESH_DELAY 10 //ms
+Scene *h_Scene;
+Scene *d_Scene;
+
+#define REFRESH_DELAY 5 //ms
 
 #define BUFFER_DATA(i) ((char *)0 + i)
 
@@ -127,26 +126,18 @@ void printCudaLastError()
 // render Mandelbrot image using CUDA or CPU
 void renderImage()
 {
-	float timeEstimate;
 	sdkResetTimer(&hTimer);
 
 	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pbo_resource, 0));
 	size_t num_bytes;
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_Dst, &num_bytes, cuda_pbo_resource));
 
-	//Copy arguments to device
-	d_Camera = h_Camera->copyToDevice();
-	d_Scene = h_Scene->copyToDevice();
-
-	printCudaLastError();
-
 	//Run raytracer on device.
-	RunRaytrace(d_Dst, imageW, imageH, d_Camera, d_Directions, d_Scene, cameraUnlocked);
+	RunRaytrace(d_Dst, imageW, imageH, *camera, d_Directions, d_Scene, cameraUnlocked);
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0));
 	
-	cudaDeviceSynchronize();
-	printCudaLastError();
+	//cudaDeviceSynchronize();
 }
 
 // OpenGL display function
@@ -201,7 +192,7 @@ void cleanup()
 
     glDeleteBuffers(1, &gl_PBO);
     glDeleteTextures(1, &gl_Tex);
-    glDeleteProgramsARB(1, &gl_Shader);
+    //glDeleteProgramsARB(1, &gl_Shader);
 }
 
 void initMenus();
@@ -222,7 +213,7 @@ void initDirections()
 	//Fill directions.
 	for (int y = 0; y < imageH; y++)
 		for (int x = 0; x < imageW; x++)
-			h_Directions[y * imageW + x] = h_Camera->getPixelDirection(x, y, imageW, imageH);
+			h_Directions[y * imageW + x] = camera->getPixelDirection(x, y, imageW, imageH);
 
 	//Copy directions to device.
 	cudaMalloc((void **)&d_Directions, directions_size);
@@ -247,24 +238,24 @@ void keyboardFunc(unsigned char k, int, int)
             #endif
             break;
 		case 'a':
-			h_Camera->move(Vector3(-0.05f, 0, 0));
+			camera->move(Vector3(-0.05f, 0, 0));
             break;
 		case 'w':
-			h_Camera->move(Vector3(0, 0, 0.05f));
+			camera->move(Vector3(0, 0, 0.05f));
             break;
 		case 'd':
-			h_Camera->move(Vector3(0.05f, 0, 0));
+			camera->move(Vector3(0.05f, 0, 0));
             break;
 		case 's':
-			h_Camera->move(Vector3(0, 0, -0.05f));
+			camera->move(Vector3(0, 0, -0.05f));
             break;
         case '+':
 			if (cameraUnlocked)
-				h_Camera->addFOV(1);
+				camera->addFOV(1);
             break;
         case '-':
 			if (cameraUnlocked)
-				h_Camera->addFOV(-1);
+				camera->addFOV(-1);
             break;
 		case ' ':
 			cameraUnlocked = !cameraUnlocked;
@@ -307,13 +298,16 @@ void clickFunc(int button, int state, int x, int y)
 // OpenGL mouse motion function
 void motionFunc(int x, int y)
 {
-    double fx = (double)(x - lastx) / (double)(imageW);
-    double fy = (double)(lasty - y) / (double)(imageH);
+	if (cameraUnlocked)
+	{
+		double fx = (double)(x - lastx) / (double)(imageW);
+		double fy = (double)(lasty - y) / (double)(imageH);
+
+		camera->moveDirection(fx, fy);
+	}
 
 	lastx = x;
 	lasty = y;
-	if (cameraUnlocked)
-		h_Camera->moveDirection(fx, fy);
 
 } // motionFunc
 
@@ -392,18 +386,18 @@ void initOpenGLBuffers(int w, int h)
 
 void initRaytracing()
 { 
-	if (h_Camera)
-		delete h_Camera;
+	if (camera)
+		delete camera;
 
-	h_Camera = new Camera(Vector3(2.5f, 1.75f, 1.f), Vector3(2.5f, 1.75f, 4));
-	h_Camera->update();
+	camera = new Camera(Vector3(2.5f, 1.75f, 1.f), Vector3(2.5f, 1.75f, 4));
+	camera->update();
 
 	if (h_Scene)
 		delete h_Scene;
 
 	h_Scene = new Scene(Primitive(Material(make_float3(0, 0, 0), make_float3(0, 0, 0))));
-
-	h_Scene->addLight(new Light(Vector3(2.5f, 1.75f, 2.5f), 15, 255, 241, 224));
+	
+	h_Scene->addLight(new Light(Vector3(2.5f, 1.75f, 2.5f), 5, 255, 241, 224));
 
 	Material test = Material(make_float3(1, 1, 1), make_float3(0, 0, 0));
 	//test.test = true;
@@ -420,6 +414,8 @@ void initRaytracing()
 	h_Scene->addSphere(new Sphere(1, Vector3(1.5f, 1, 4), Material(make_float3(0.5f, 0, 0), make_float3(0, 0, 0))));
 	h_Scene->addSphere(new Sphere(1, Vector3(2.5f, 2.6547f, 4), Material(make_float3(0, 0.5f, 0), make_float3(0, 0, 0))));
 	h_Scene->addSphere(new Sphere(1, Vector3(3.5f, 1, 4), Material(make_float3(0, 0, 0.5f), make_float3(0, 0, 0))));
+
+	d_Scene = h_Scene->copyToDevice();
 
 	initDirections();
 }
@@ -440,6 +436,7 @@ void reshapeFunc(int w, int h)
     imageH = h;
 
 	initDirections();
+	d_Scene = h_Scene->copyToDevice();
 }
 
 void initGL(int *argc, char **argv)
@@ -460,16 +457,16 @@ void initGL(int *argc, char **argv)
     glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
     initMenus();
 
-    if (!isGLVersionSupported(1,5) ||
-        !areGLExtensionsSupported("GL_ARB_vertex_buffer_object GL_ARB_pixel_buffer_object"))
-    {
-        fprintf(stderr, "Error: failed to get minimal extensions for demo\n");
-        fprintf(stderr, "This sample requires:\n");
-        fprintf(stderr, "  OpenGL version 1.5\n");
-        fprintf(stderr, "  GL_ARB_vertex_buffer_object\n");
-        fprintf(stderr, "  GL_ARB_pixel_buffer_object\n");
-        exit(EXIT_SUCCESS);
-    }
+	if (!isGLVersionSupported(1,5) ||
+		!areGLExtensionsSupported("GL_ARB_vertex_buffer_object GL_ARB_pixel_buffer_object"))
+	{
+		fprintf(stderr, "Error: failed to get minimal extensions for demo\n");
+		fprintf(stderr, "This sample requires:\n");
+		fprintf(stderr, "  OpenGL version 1.5\n");
+		fprintf(stderr, "  GL_ARB_vertex_buffer_object\n");
+		fprintf(stderr, "  GL_ARB_pixel_buffer_object\n");
+		exit(EXIT_SUCCESS);
+	}
 
     printf("OpenGL window created.\n");
 }
@@ -494,24 +491,10 @@ void initData(int argc, char **argv)
 }
 
 // General initialization call for CUDA Device
-void chooseCudaDevice(int argc, const char **argv, bool bUseOpenGL)
+void chooseCudaDevice(int argc, const char **argv)
 {
-    if (bUseOpenGL)
-        findCudaGLDevice(argc, argv);
-    else
-        findCudaDevice(argc, argv);
+    findCudaGLDevice(argc, argv);
 }
-
-void printHelp()
-{
-    printf("[Mandelbrot]\n");
-    printf("\tUsage Parameters\n");
-    printf("\t-device=n        (requires to be in non-graphics mode)\n");
-    printf("\t-file=output.ppm (output file for image testing)\n");
-    printf("\t-mode=0,1        (0=Mandelbrot Set, 1=Julia Set)\n");
-    printf("\t-fp64            (run in double precision mode)\n");
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main program
@@ -527,39 +510,8 @@ int main(int argc, char **argv)
 
     printf("Starting...\n");
 
-    // parse command line arguments
-    if (checkCmdLineFlag(argc, (const char **)argv, "help"))
-    {
-        printHelp();
-        exit(EXIT_SUCCESS);
-    }
-
-    if (checkCmdLineFlag(argc, (const char **)argv, "file"))
-    {
-        fpsLimit = frameCheckNumber;
-
-        // use command-line specified CUDA device, otherwise use device with highest Gflops/s
-        findCudaDevice(argc, (const char **)argv); // no OpenGL usage
-
-        // If the GPU does not meet SM1.1 capabilities, we will quit
-        if (!checkCudaCapabilities(1,1)) 
-            exit(EXIT_SUCCESS); 
-
-        exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
-    }
     // use command-line specified CUDA device, otherwise use device with highest Gflops/s
-    else if (checkCmdLineFlag(argc, (const char **)argv, "device"))
-    {
-        printf("[%s]\n", argv[0]);
-        printf("   Does not explicitly support -device=n in OpenGL mode\n");
-        printf("   To use -device=n, the sample must be running w/o OpenGL\n\n");
-        printf(" > %s -device=n -file=<image_name>.ppm\n", argv[0]);
-        printf("exiting...\n");
-        exit(EXIT_SUCCESS);
-    }
-
-    // use command-line specified CUDA device, otherwise use device with highest Gflops/s
-    chooseCudaDevice(argc, (const char **)argv, true); // yes to OpenGL usage
+    chooseCudaDevice(argc, (const char **)argv); // yes to OpenGL usage
 
     // If the GPU does not meet SM1.1 capabilities, we quit
     if (!checkCudaCapabilities(1,1))
@@ -574,7 +526,7 @@ int main(int argc, char **argv)
     initOpenGLBuffers(imageW, imageH);
 
 	//cudaDeviceSetLimit(cudaLimitMallocHeapSize, 268435456);
-	cudaDeviceSetLimit(cudaLimitStackSize, 16 * 1024);
+	cudaDeviceSetLimit(cudaLimitStackSize, 32 * 1024);
 
 	size_t heapSize;
 	cudaDeviceGetLimit(&heapSize, cudaLimitMallocHeapSize);

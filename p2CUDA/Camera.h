@@ -1,10 +1,10 @@
 #include <cuda_runtime.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "Vector3.h"
-#include "ICudaObject.h"
 
-class Camera/* : public ICudaObject*/
+class Camera
 {
 private:
 	const float screenWidth = 2;
@@ -21,14 +21,12 @@ private:
 	void setDirection();
 	void setScreenDistance();
 
-
 public:
 	Camera(Vector3 location, Vector3 target, int FOV = 90);
 	__device__ Camera(const Camera& c);
-	~Camera();
+	__device__ __host__ ~Camera();
 
 	void update();
-	Camera *copyToDevice() { return ICudaObject::physicalCopyToDevice<Camera>(this); }
 
 	__device__ __host__ Vector3 getLocation();
 

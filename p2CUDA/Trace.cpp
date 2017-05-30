@@ -35,11 +35,10 @@ __device__ float3 PrimaryTrace::Do(Scene *scene, int recursionDepth)
 			Vector3 d = closest.getRay().direction;
 			Vector3 n = closest.getNormal();
 			float rayNormalAngle = Vector3::Dot(d, n);
-			//printf("n: (%f,%f,%f), d: (%f,%f,%f), a: %f \n", n.x, n.y, n.z, d.x, d.y, d.z, rayNormalAngle);
-			//rayNormalAngle = rayNormalAngle < Epsilon ? Epsilon : rayNormalAngle > 1 ? 1 : rayNormalAngle;
+
 			n *= (2 * rayNormalAngle);
 			Vector3 newV = d - n;
-			//Vector3 dir = newV.normalized();
+
 			Ray bounced = Ray(closest.getRay().AsCoordinateVector() + (newV * Epsilon), newV);
 			PrimaryTrace subTrace = PrimaryTrace(bounced);
 			float3 subColor = subTrace.Do(scene, recursionDepth - 1);
@@ -48,11 +47,6 @@ __device__ float3 PrimaryTrace::Do(Scene *scene, int recursionDepth)
 			result.y += specColor.y * subColor.y;
 			result.z += specColor.z * subColor.z;
 		}
-
-		float lightAttenuation = 1.f / (closestDistance * closestDistance);
-		result.x *= lightAttenuation;
-		result.y *= lightAttenuation;
-		result.z *= lightAttenuation;
 	}
 
 	__syncthreads();
@@ -63,7 +57,6 @@ __device__ float3 ShadowTrace::Do(Scene *scene, int recursionDepth)
 {
 	float3 lColor = light.getDiffuseColor();
 	bool lit = !scene->shadowIntersect(ray);
-	__syncthreads();
 
 	float lightAttenuation = ((int)lit) / (ray.length * ray.length);
 	float areaAttenuation = fmaxf(0.0f, Vector3::Dot(ri.getNormal(), ray.direction));
