@@ -1,0 +1,5 @@
+x64/
+Debug/
+*.obj
+*.pdb
+*.db
