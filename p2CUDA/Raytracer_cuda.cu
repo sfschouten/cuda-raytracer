@@ -30,7 +30,7 @@ __global__ void Raytrace(uchar4 *dst, const int imageW, const int imageH, Camera
 
 void RunRaytrace(uchar4 *dst, const int imageW, const int imageH, Camera camera, Vector3 *directions, Scene *scene, bool cameraUnlocked)
 {
-	dim3 block(8, 8, 1);
+	dim3 block(16, 8, 1);
 	dim3 grid(imageW / block.x, imageH / block.y, 1);
 	Raytrace<<<grid, block>>>(dst, imageW, imageH, camera, directions, scene, cameraUnlocked);
 } 
