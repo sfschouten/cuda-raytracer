@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "p2_stefan_stijn", "vs_solution\p2_stefan_stijn.csproj", "{9354EB6E-D674-4763-A589-3631FABE7654}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p2CUDA", "p2CUDA\p2CUDA.vcxproj", "{B6F031C1-4DAA-4797-99BB-8213966C44F1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cuda-raytracer", "cuda-raytracer\cuda-raytracer.vcxproj", "{B6F031C1-4DAA-4797-99BB-8213966C44F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
